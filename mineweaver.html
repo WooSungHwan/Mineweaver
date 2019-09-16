@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <script>
+      var randomArr = [];
+      window.onload = function(){
+        randomNum();
+        tagCreate();
+
+
+        console.log(randomArr);
+      };
+/*
+  data-mine : 이 데이타가 마인이다.
+  isMineCheck : 유저가 마인으로 체크했다.
+  isclicked : 이미 한번이상 좌클릭해서 다시 못누르게 하는 변수
+  data-minenum : 내 주변 마인 숫자.
+*/
+
+
+      function randomNum(){
+        for(var k =0; k<10; k++){
+          var value = Math.random();
+          var result = Math.floor(value * 100) + 1; //1부터 100까지 난수 10개 생성.
+
+          console.log(randomArr.indexOf(result));
+
+          //중복값있으면
+          if(randomArr.indexOf(result)>-1) k--;
+          else randomArr.push(result);
+        }
+      }
+
+      function tagCreate(){
+        var app = document.getElementById("app");
+        app.setAttribute("style","width:300px; height:300px; border:1px solid black");
+
+
+        for(var i = 0; i <100; i++){
+          var div = document.createElement('div');
+          //div.innerText = i+"";
+          div.setAttribute("id","block"+i);
+          div.setAttribute("class","block");
+
+          //지뢰 심기
+          if(randomArr.indexOf(i)>-1) div.setAttribute("data-mine",true);
+          else div.setAttribute("data-mine",false);
+          div.setAttribute("isclicked",false);
+          div.setAttribute("isminecheck",false);
+          div.onmousedown = function(){
+            var isClicked = event.srcElement.getAttribute("isclicked");
+            if(isClicked=="false"){ //이미 클릭됬다면 이벤트 아무것도 안탄다.
+              mouseEvent(event);
+            }
+          }
+          app.appendChild(div);
+        }
+
+        //만들고 나서 태그들이 가진 주변 마인수를 속성으로
+        for(i=0; i<100; i++){
+          var div = document.getElementById("block"+i);
+          div.setAttribute("data-minenum",returnMineNum(div).length);
+        }
+      }
+
+      function mouseEvent(event){
+        var btn = event.button;
+        var block = event.srcElement;
+        var isMine= event.srcElement.getAttribute("isminecheck");//내가 마인으로 찍었다.
+        if(btn==0){//좌클릭
+          event.toElement.setAttribute("isclicked",true);
+          block.setAttribute("style","background-color:#A9A9A9;");
+          if(block.getAttribute("data-mine") == "true"){
+            //지뢰 눌렀을때 로직
+            alert("지뢰");
+
+            //지뢰 표시
+            block.setAttribute("style",
+                "background-image:url('image/btnmine.png');"+
+                "background-repeat:no-repeat;"+
+                "background-size:30px;"
+            );
+
+            //게임 오버 및 재시작.
+
+          }else{//지뢰아님
+            //숫자 있는 경우
+            var minenum = block.getAttribute("data-minenum");
+            if(minenum>0)
+              block.innerText = minenum;
+            //숫자 없는 경우.
+            else
+              block.innerText = null;
+          }
+        }else{ //우클릭
+          //해당 배경이 깃발로
+          if(isMine =="false"){ //깃발등록(false)
+            block.setAttribute("style",
+                "background-image:url('image/btnchecked.png');"+
+                "background-repeat:no-repeat;"+
+                "background-size:30px;"
+            );
+            event.toElement.setAttribute("isminecheck","true");
+          }else{ //깃발해제(true)
+            block.setAttribute("style","background-color:grey;");
+            event.toElement.setAttribute("isminecheck","false");
+          }
+        }
+      }
+
+      function returnMineNum(block){
+        var result = [];
+        var id = block.getAttribute("id");
+        id = id.replace("block","");
+        var me = parseInt(id);
+
+        var upLineNum = me-11; //10의자리가 하나 작아야함. 음수인지 파악.
+        var meLineNum = me-1; //10의자리가 같아야함.  me 값은 제외.
+        var downLineNum = me + 9; //10의자리가 하나 커야함. 100이상이면 안됨.
+
+
+        var i;
+        for(i = 0; i < 3; i++){
+          //위쪽
+          var isOverZero = (upLineNum >= 0); // 0보다 커야되고
+          var isUpLastCondition = (Math.floor(me/10) - Math.floor(upLineNum/10) == 1);// me의 앞자리에서 upLineNum의 앞자리를 빼면 1 나와야한다.
+          if(isOverZero && isUpLastCondition){
+            var nowUpBlock = document.getElementById("block"+upLineNum);
+            if(nowUpBlock.getAttribute("data-mine")=="true"){
+              result.push(nowUpBlock.getAttribute("id").replace("block",""));
+            }
+          }
+
+          //중간쪽
+          var isNotMe = (meLineNum !=me);
+          var isMeLastCondition = (Math.floor(me/10) - Math.floor(meLineNum/10) == 0);
+          if(isMeLastCondition && isNotMe){
+            var nowMeBlock = document.getElementById("block"+meLineNum);
+            if(nowMeBlock.getAttribute("data-mine")=="true"){
+              result.push(nowMeBlock.getAttribute("id").replace("block",""));
+            }
+          }
+
+          //아래쪽
+          var isUnderHundred = (downLineNum <100);
+          var isDownLastCondition = (Math.floor(me/10) - Math.floor(downLineNum/10) == -1);
+          if(isUnderHundred && isDownLastCondition){
+            var nowDownBlock = document.getElementById("block"+downLineNum);
+            if(nowDownBlock.getAttribute("data-mine")=="true"){
+              result.push(nowDownBlock.getAttribute("id").replace("block",""));
+            }
+          }
+
+          //증가
+          upLineNum++; meLineNum++; downLineNum++;
+        }
+        return result;
+      }
+
+    </script>
+  </head>
+  <style>
+  .block{
+    width:28px;
+    height:28px;
+    border:1px solid black;
+    float:left;
+    background:grey;
+  }
+  </style>
+  <script src="http://code.jquery.com/jquery.min.js"></script>
+  <body>
+    <div id="app" oncontextmenu="return false;">
+
+    </div>
+  </body>
+</html>
