@@ -5,12 +5,11 @@
     <title></title>
     <script>
       var randomArr = [];
+      var checkArr = [];
       window.onload = function(){
+        restartEvent();
         randomNum();
         tagCreate();
-
-
-        console.log(randomArr);
       };
 /*
   data-mine : 이 데이타가 마인이다.
@@ -18,15 +17,10 @@
   isclicked : 이미 한번이상 좌클릭해서 다시 못누르게 하는 변수
   data-minenum : 내 주변 마인 숫자.
 */
-
-
       function randomNum(){
         for(var k =0; k<10; k++){
           var value = Math.random();
-          var result = Math.floor(value * 100) + 1; //1부터 100까지 난수 10개 생성.
-
-          console.log(randomArr.indexOf(result));
-
+          var result = Math.floor(value * 100); //0부터 99까지 난수 10개 생성.
           //중복값있으면
           if(randomArr.indexOf(result)>-1) k--;
           else randomArr.push(result);
@@ -34,13 +28,12 @@
       }
 
       function tagCreate(){
-        var app = document.getElementById("app");
+        var app = document.querySelector("#app");
         app.setAttribute("style","width:300px; height:300px; border:1px solid black");
 
 
         for(var i = 0; i <100; i++){
           var div = document.createElement('div');
-          //div.innerText = i+"";
           div.setAttribute("id","block"+i);
           div.setAttribute("class","block");
 
@@ -60,17 +53,35 @@
 
         //만들고 나서 태그들이 가진 주변 마인수를 속성으로
         for(i=0; i<100; i++){
-          var div = document.getElementById("block"+i);
-          div.setAttribute("data-minenum",returnMineNum(div).length);
+          var div = document.querySelector("#block"+i);
+          div.setAttribute("data-minenum",returnMineNum(div,false));
         }
-      } 
+      }
 
       function mouseEvent(event){
         var btn = event.button;
         var block = event.srcElement;
-        var isMine= event.srcElement.getAttribute("isminecheck");//내가 마인으로 찍었다.
-        if(btn==0){//좌클릭
-          event.toElement.setAttribute("isclicked",true);
+        var isminecheck= event.srcElement.getAttribute("isminecheck");//내가 마인으로 찍었다.
+        var idNum = block.getAttribute("id").replace("block","");
+        if(btn!=0 && btn!=undefined){//우클릭
+          //해당 배경이 깃발로
+          if(isminecheck =="false"){ //깃발등록(false)
+            block.setAttribute("style",
+                "background-image:url('image/btnchecked.png');"+
+                "background-repeat:no-repeat;"+
+                "background-size:30px;"
+            );
+            block.setAttribute("isminecheck","true");
+            if(gameOverTest()){
+              alert("지뢰를 모두 찾았습니다. 축하합니다.");
+            }
+          }else{ //깃발해제(true)
+            block.setAttribute("style","background-color:grey;");
+            block.setAttribute("isminecheck","false");
+          }
+
+        }else{ //좌클릭
+          block.setAttribute("isclicked",true);
           block.setAttribute("style","background-color:#A9A9A9;");
           if(block.getAttribute("data-mine") == "true"){
             //지뢰 눌렀을때 로직
@@ -82,36 +93,25 @@
                 "background-repeat:no-repeat;"+
                 "background-size:30px;"
             );
-
             //게임 오버 및 재시작.
-
+            if(confirm("게임 오버 gg re?")){
+              document.querySelector("#restart").click();
+            }
           }else{//지뢰아님
             //숫자 있는 경우
             var minenum = block.getAttribute("data-minenum");
             if(minenum>0)
               block.innerText = minenum;
             //숫자 없는 경우.
-            else
-              block.innerText = null;
-          }
-        }else{ //우클릭
-          //해당 배경이 깃발로
-          if(isMine =="false"){ //깃발등록(false)
-            block.setAttribute("style",
-                "background-image:url('image/btnchecked.png');"+
-                "background-repeat:no-repeat;"+
-                "background-size:30px;"
-            );
-            event.toElement.setAttribute("isminecheck","true");
-          }else{ //깃발해제(true)
-            block.setAttribute("style","background-color:grey;");
-            event.toElement.setAttribute("isminecheck","false");
+            else{
+              returnMineNum(block,true);
+            }
           }
         }
       }
-
-      function returnMineNum(block){
-        var result = [];
+      //flag는 맨처음 div태그에 데이터를 초기화할때 flag타는 부분은 실행 안되게 하기 위함.
+      function returnMineNum(block,flag){
+        var result =0;
         var id = block.getAttribute("id");
         id = id.replace("block","");
         var me = parseInt(id);
@@ -120,16 +120,21 @@
         var meLineNum = me-1; //10의자리가 같아야함.  me 값은 제외.
         var downLineNum = me + 9; //10의자리가 하나 커야함. 100이상이면 안됨.
 
+        for(var i = 0; i < 3; i++){
 
-        var i;
-        for(i = 0; i < 3; i++){
           //위쪽
           var isOverZero = (upLineNum >= 0); // 0보다 커야되고
           var isUpLastCondition = (Math.floor(me/10) - Math.floor(upLineNum/10) == 1);// me의 앞자리에서 upLineNum의 앞자리를 빼면 1 나와야한다.
           if(isOverZero && isUpLastCondition){
-            var nowUpBlock = document.getElementById("block"+upLineNum);
+            var nowUpBlock = document.querySelector("#block"+upLineNum);
             if(nowUpBlock.getAttribute("data-mine")=="true"){
-              result.push(nowUpBlock.getAttribute("id").replace("block",""));
+              result++;
+            }
+
+            if(flag && (nowUpBlock.getAttribute("data-minenum") == "0" || nowUpBlock.getAttribute("data-mine") =="false")){
+              var customEvent = document.createEvent('Event');
+              customEvent.initEvent('mousedown',false,true);
+              nowUpBlock.dispatchEvent(customEvent);
             }
           }
 
@@ -137,9 +142,15 @@
           var isNotMe = (meLineNum !=me);
           var isMeLastCondition = (Math.floor(me/10) - Math.floor(meLineNum/10) == 0);
           if(isMeLastCondition && isNotMe){
-            var nowMeBlock = document.getElementById("block"+meLineNum);
+            var nowMeBlock = document.querySelector("#block"+meLineNum);
             if(nowMeBlock.getAttribute("data-mine")=="true"){
-              result.push(nowMeBlock.getAttribute("id").replace("block",""));
+              result++;
+            }
+
+            if(flag && (nowMeBlock.getAttribute("data-minenum") == "0" || nowMeBlock.getAttribute("data-mine") =="false")){
+              var customEvent = document.createEvent('Event');
+              customEvent.initEvent('mousedown',false,true);
+              nowMeBlock.dispatchEvent(customEvent);
             }
           }
 
@@ -147,16 +158,46 @@
           var isUnderHundred = (downLineNum <100);
           var isDownLastCondition = (Math.floor(me/10) - Math.floor(downLineNum/10) == -1);
           if(isUnderHundred && isDownLastCondition){
-            var nowDownBlock = document.getElementById("block"+downLineNum);
+            var nowDownBlock = document.querySelector("#block"+downLineNum);
             if(nowDownBlock.getAttribute("data-mine")=="true"){
-              result.push(nowDownBlock.getAttribute("id").replace("block",""));
+              result++;
+            }
+
+            if(flag && (nowDownBlock.getAttribute("data-minenum") == "0" || nowDownBlock.getAttribute("data-mine") =="false")){
+              var customEvent = document.createEvent('Event');
+              customEvent.initEvent('mousedown',false,true);
+              nowDownBlock.dispatchEvent(customEvent);
             }
           }
-
           //증가
           upLineNum++; meLineNum++; downLineNum++;
         }
         return result;
+      }
+
+      function restartEvent(){
+        document.querySelector("#restart").addEventListener("click",function(){
+          var app = document.querySelector("#app");
+          var appLength = app.childElementCount;
+          for(var i =0; i<appLength; i++){
+            app.removeChild(app.children[0]);
+          }
+          randomNum();
+          tagCreate();
+        });
+      }
+
+      function gameOverTest(){
+        var result = 0;
+        for(var i =0; i<randomArr.length; i++){
+          var id ="#block"+randomArr[i];
+          if(document.querySelector(id).getAttribute("isminecheck") == "true"){
+            result++;
+          }else{
+            return false;
+          }
+        }
+        return result == 10;
       }
 
     </script>
@@ -169,11 +210,15 @@
     float:left;
     background:grey;
   }
+  .block:hover{
+    background-color:#A9A9A9;
+  }
   </style>
-  <script src="http://code.jquery.com/jquery.min.js"></script>
+
   <body>
     <div id="app" oncontextmenu="return false;">
 
     </div>
+    <button type="button" id="restart">재시작</button>
   </body>
 </html>
