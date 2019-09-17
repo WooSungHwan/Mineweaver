@@ -35,8 +35,6 @@
 
       function tagCreate(){
         var app = document.querySelector("#app");
-        app.setAttribute("style","width:300px; height:300px; border:1px solid black");
-
 
         for(var i = 0; i <100; i++){
           var div = document.createElement('div');
@@ -94,12 +92,9 @@
           if(block.getAttribute("data-mine") == "true"){
             //지뢰 눌렀을때 로직
 
-            //지뢰 표시
-            block.setAttribute("style",
-                "background-image:url('image/btnmine.png');"+
-                "background-repeat:no-repeat;"+
-                "background-size:30px;"
-            );
+            block.setAttribute("style","background-color:red;")
+            allMineShow(block); //모든 지뢰 표시
+
             //게임 오버 및 재시작.
             setTimeout(function(){
               if(confirm("지뢰에 걸렸습니다. 다시하시겠습니까?"))
@@ -220,6 +215,24 @@
           document.querySelector("#app").children[i].onmousedown = null;
         }
       }
+      function allMineShow(clickedblock){
+        var block = document.querySelector("#app").children;
+        for(var i=0; i<block.length; i++){
+          if(block[i].getAttribute("data-mine")=="true"){
+            //배경이미지 마인으로
+            block[i].setAttribute("style",
+                "background-image:url('image/btnmine.png');"+
+                "background-repeat:no-repeat;"+
+                "background-size:30px;"
+            );
+          }
+          if(block[i] == clickedblock){
+            clickedblock.setAttribute("style","background-image:url('image/btnclickmine.png');"
+                          +"background-repeat:no-repeat;"+
+                          "background-size:30px;");
+          }
+        }
+      }
 
     </script>
   </head>
@@ -238,13 +251,28 @@
     color:black;
     font-size:20px;
   }
+  #app{
+    width:300px;
+    height:300px;
+    border:1px solid black;
+  }
+  #set{
+    padding:30px;
+    width:100px;
+    height:100px;
+    margin:0 auto;
+  }
   </style>
 
   <body>
-    <div id="app" oncontextmenu="return false;">
+
+    <div id="app" oncontextmenu="return false;" style="margin:0 auto;">
 
     </div>
-    <button type="button" id="restart">재시작</button>
-    <div id="score"></div>개 남음.
+    <div id="set">
+      <button type="button" id="restart">재시작</button><br>
+      <label>남은 지뢰</label> <span id="score"></span>
+    </div>
+
   </body>
 </html>
