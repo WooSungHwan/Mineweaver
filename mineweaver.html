@@ -96,7 +96,9 @@
             setTimeout(function(){
               if(confirm("지뢰에 걸렸습니다. 다시하시겠습니까?"))
                 document.querySelector("#restart").click();
-              
+              else {
+                gameOver();
+              }
             },100);
           }else{//지뢰아님
             //숫자 있는 경우
@@ -200,6 +202,13 @@
           }
         }
         return result == 10;
+      }
+
+      function gameOver(){
+        //모든 이벤트 회수
+        for(var i =0; i<100; i++){
+          document.querySelector("#app").children[i].onmousedown = null;
+        }
       }
 
     </script>
