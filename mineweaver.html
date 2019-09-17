@@ -6,10 +6,12 @@
     <script>
       var randomArr = [];
       var checkArr = [];
+      var score = 10;
       window.onload = function(){
         restartEvent();
         randomNum();
         tagCreate();
+        printPlag(score);
       };
 /*
   data-mine : 이 데이타가 마인이다.
@@ -17,6 +19,10 @@
   isclicked : 이미 한번이상 좌클릭해서 다시 못누르게 하는 변수
   data-minenum : 내 주변 마인 숫자.
 */
+      function printPlag(n){
+        document.querySelector("#score").innerText = n;
+      }
+
       function randomNum(){
         for(var k =0; k<10; k++){
           var value = Math.random();
@@ -66,6 +72,7 @@
         if(btn!=0 && btn!=undefined){//우클릭
           //해당 배경이 깃발로
           if(isminecheck =="false"){ //깃발등록(false)
+            printPlag(--score);
             block.setAttribute("style",
                 "background-image:url('image/btnchecked.png');"+
                 "background-repeat:no-repeat;"+
@@ -76,6 +83,7 @@
               alert("지뢰를 모두 찾았습니다. 축하합니다.");
             }
           }else{ //깃발해제(true)
+            printPlag(++score);
             block.setAttribute("style","background-color:grey;");
             block.setAttribute("isminecheck","false");
           }
@@ -188,6 +196,8 @@
           randomArr=[];
           randomNum();
           tagCreate();
+          score=10;
+          printPlag(score);
         });
       }
 
@@ -224,6 +234,10 @@
   .block:hover{
     background-color:#A9A9A9;
   }
+  #score{
+    color:black;
+    font-size:20px;
+  }
   </style>
 
   <body>
@@ -231,5 +245,6 @@
 
     </div>
     <button type="button" id="restart">재시작</button>
+    <div id="score"></div>개 남음.
   </body>
 </html>
