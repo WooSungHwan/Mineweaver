@@ -85,7 +85,6 @@
           block.setAttribute("style","background-color:#A9A9A9;");
           if(block.getAttribute("data-mine") == "true"){
             //지뢰 눌렀을때 로직
-            alert("지뢰");
 
             //지뢰 표시
             block.setAttribute("style",
@@ -94,9 +93,11 @@
                 "background-size:30px;"
             );
             //게임 오버 및 재시작.
-            if(confirm("게임 오버 gg re?")){
-              document.querySelector("#restart").click();
-            }
+            setTimeout(function(){
+              if(confirm("지뢰에 걸렸습니다. 다시하시겠습니까?"))
+                document.querySelector("#restart").click();
+              
+            },100);
           }else{//지뢰아님
             //숫자 있는 경우
             var minenum = block.getAttribute("data-minenum");
